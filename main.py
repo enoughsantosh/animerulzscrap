@@ -62,75 +62,37 @@ async def fetch_homepage():
                 })
         return trending
 
-    # 🟢 Extract Top Airing
-    def extract_top_airing():
-        top_airing = []
-        for item in soup.select('.block_area:has(h2:contains("Top Airing")) .film-poster'):
-            title_elem = item.select_one(".dynamic-name")
-            image_elem = item.select_one("img")
-            link_elem = item.select_one("a")
+    # 🟢 Extract Anime from a Specific Section
+    def extract_anime_by_section(section_title):
+        anime_list = []
+        section = soup.find("h2", string=section_title)
+        if section:
+            container = section.find_parent("section")
+            if container:
+                for item in container.select(".film-poster"):
+                    title_elem = item.select_one(".dynamic-name")
+                    image_elem = item.select_one("img")
+                    link_elem = item.select_one("a")
 
-            if title_elem and image_elem and link_elem:
-                top_airing.append({
-                    "title": title_elem.text.strip(),
-                    "image": image_elem["data-src"],
-                    "link": link_elem["href"],
-                })
-        return top_airing
+                    if title_elem and image_elem and link_elem:
+                        anime_list.append({
+                            "title": title_elem.text.strip(),
+                            "image": image_elem["data-src"],
+                            "link": link_elem["href"],
+                        })
+        return anime_list
 
-    # 🟢 Extract Most Popular
-    def extract_most_popular():
-        most_popular = []
-        for item in soup.select('.block_area:has(h2:contains("Most Popular")) .film-poster'):
-            title_elem = item.select_one(".dynamic-name")
-            image_elem = item.select_one("img")
-            link_elem = item.select_one("a")
-
-            if title_elem and image_elem and link_elem:
-                most_popular.append({
-                    "title": title_elem.text.strip(),
-                    "image": image_elem["data-src"],
-                    "link": link_elem["href"],
-                })
-        return most_popular
-
-    # 🟢 Extract Most Favourite
-    def extract_most_favourite():
-        most_favourite = []
-        for item in soup.select('.block_area:has(h2:contains("Most Favourite")) .film-poster'):
-            title_elem = item.select_one(".dynamic-name")
-            image_elem = item.select_one("img")
-            link_elem = item.select_one("a")
-
-            if title_elem and image_elem and link_elem:
-                most_favourite.append({
-                    "title": title_elem.text.strip(),
-                    "image": image_elem["data-src"],
-                    "link": link_elem["href"],
-                })
-        return most_favourite
-
-    # 🟢 Extract Latest Completed
-    def extract_latest_completed():
-        latest_completed = []
-        for item in soup.select('.block_area:has(h2:contains("Latest Completed")) .film-poster'):
-            title_elem = item.select_one(".dynamic-name")
-            image_elem = item.select_one("img")
-            link_elem = item.select_one("a")
-
-            if title_elem and image_elem and link_elem:
-                latest_completed.append({
-                    "title": title_elem.text.strip(),
-                    "image": image_elem["data-src"],
-                    "link": link_elem["href"],
-                })
-        return latest_completed
+    # 🟢 Extract Sections
+    top_airing = extract_anime_by_section("Top Airing")
+    most_popular = extract_anime_by_section("Most Popular")
+    most_favourite = extract_anime_by_section("Most Favourite")
+    latest_completed = extract_anime_by_section("Latest Completed")
 
     return {
         "Spotlight": extract_spotlight(),
         "Trending": extract_trending(),
-        "Top Airing": extract_top_airing(),
-        "Most Popular": extract_most_popular(),
-        "Most Favourite": extract_most_favourite(),
-        "Latest Completed": extract_latest_completed(),
+        "Top Airing": top_airing,
+        "Most Popular": most_popular,
+        "Most Favourite": most_favourite,
+        "Latest Completed": latest_completed,
     }
