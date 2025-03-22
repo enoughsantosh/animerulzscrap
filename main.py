@@ -62,29 +62,36 @@ async def fetch_homepage():
                 })
         return trending
 
-    # 🟢 Extract Top Airing (Inside #anime-featured)
-    def extract_top_airing():
-        top_airing = []
-        section = soup.select_one("#anime-featured .anif-block-header:contains('Top Airing')")
+    # 🟢 Extract Other Sections (Top Airing, Most Popular, Most Favourite, Latest Completed)
+    def extract_section(section_class):
+        anime_list = []
+        section = soup.select_one(f".{section_class}")  # Corrected selector
 
         if section:
-            container = section.find_next("ul")  # Get the <ul> under "Top Airing"
-            if container:
-                for item in container.select("li"):
-                    title_elem = item.select_one("h3.film-name a")
-                    image_elem = item.select_one(".film-poster img")
-                    link_elem = item.select_one(".film-poster a")
+            for item in section.select(".film-poster"):
+                title_elem = item.select_one(".dynamic-name")
+                image_elem = item.select_one("img")
+                link_elem = item.select_one("a")
 
-                    if title_elem and image_elem and link_elem:
-                        top_airing.append({
-                            "title": title_elem.text.strip(),
-                            "image": image_elem["data-src"],
-                            "link": link_elem["href"],
-                        })
-        return top_airing
+                if title_elem and image_elem and link_elem:
+                    anime_list.append({
+                        "title": title_elem.text.strip(),
+                        "image": image_elem["data-src"],
+                        "link": link_elem["href"],
+                    })
+        return anime_list
+
+    # Corrected section class names from the HTML
+    top_airing = extract_section("block_area_top-airing")
+    most_popular = extract_section("block_area_most-popular")
+    most_favourite = extract_section("block_area_most-favourite")
+    latest_completed = extract_section("block_area_latest-completed")
 
     return {
         "Spotlight": extract_spotlight(),
         "Trending": extract_trending(),
-        "Top Airing": extract_top_airing(),
+        "Top Airing": top_airing,
+        "Most Popular": most_popular,
+        "Most Favourite": most_favourite,
+        "Latest Completed": latest_completed,
     }
