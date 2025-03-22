@@ -63,9 +63,9 @@ async def fetch_homepage():
         return trending
 
     # 🟢 Extract Other Sections (Top Airing, Most Popular, Most Favourite, Latest Completed)
-    def extract_section(section_class):
+    def extract_section(section_id):
         anime_list = []
-        section = soup.select_one(f".{section_class}")  # Corrected selector
+        section = soup.select_one(f"#{section_id}")
 
         if section:
             for item in section.select(".film-poster"):
@@ -81,11 +81,11 @@ async def fetch_homepage():
                     })
         return anime_list
 
-    # Corrected section class names from the HTML
-    top_airing = extract_section("block_area_top-airing")
-    most_popular = extract_section("block_area_most-popular")
-    most_favourite = extract_section("block_area_most-favourite")
-    latest_completed = extract_section("block_area_latest-completed")
+    # Corrected section IDs from the HTML
+    top_airing = extract_section("anime-trending")
+    most_popular = extract_section("anime-featured")
+    most_favourite = extract_section("anime-featured")
+    latest_completed = extract_section("anime-featured")
 
     return {
         "Spotlight": extract_spotlight(),
@@ -94,4 +94,4 @@ async def fetch_homepage():
         "Most Popular": most_popular,
         "Most Favourite": most_favourite,
         "Latest Completed": latest_completed,
-    }
+                            }
