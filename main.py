@@ -18,59 +18,61 @@ app.add_middleware(
 @app.get("/")
 def home():
     return {"message": "Anime Search API is running!"}
-# Homepage 
-@app.get("/home")
 
-def handler(event, context):
+@app.get("/home")
+async def fetch_homepage():
     url = "https://animerulzapp.com/home"
     headers = {"User-Agent": "Mozilla/5.0"}
 
-    # Fetch HTML
-    response = requests.get(url, headers=headers)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
+    
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Failed to fetch data")
+
     soup = BeautifulSoup(response.text, "html.parser")
 
     def extract_spotlight():
         spotlight = []
         for slide in soup.select(".deslide-item"):
-            title = slide.select_one(".desi-head-title").text.strip()
-            image = slide.select_one(".deslide-cover-img img")["data-src"]
-            link = slide.select_one(".desi-buttons a")["href"]
-            spotlight.append({"title": title, "image": image, "link": link})
+            title_elem = slide.select_one(".desi-head-title")
+            image_elem = slide.select_one(".deslide-cover-img img")
+            link_elem = slide.select_one(".desi-buttons a")
+
+            if title_elem and image_elem and link_elem:
+                spotlight.append({
+                    "title": title_elem.text.strip(),
+                    "image": image_elem["data-src"],
+                    "link": link_elem["href"],
+                })
         return spotlight
 
     def extract_trending():
         trending = []
         for item in soup.select("#trending-home .swiper-slide"):
-            title = item.select_one(".film-title").text.strip()
-            image = item.select_one(".film-poster img")["data-src"]
-            link = item.select_one(".film-poster")["href"]
-            trending.append({"title": title, "image": image, "link": link})
+            title_elem = item.select_one(".film-title")
+            image_elem = item.select_one(".film-poster img")
+            link_elem = item.select_one(".film-poster")
+
+            if title_elem and image_elem and link_elem:
+                trending.append({
+                    "title": title_elem.text.strip(),
+                    "image": image_elem["data-src"],
+                    "link": link_elem["href"],
+                })
         return trending
 
-    # Placeholder for other categories
-    def extract_top_airing():
-        return []
+    # Placeholder for missing categories
+    def extract_top_airing(): return []
+    def extract_most_popular(): return []
+    def extract_most_favourite(): return []
+    def extract_latest_completed(): return []
 
-    def extract_most_popular():
-        return []
-
-    def extract_most_favourite():
-        return []
-
-    def extract_latest_completed():
-        return []
-
-    data = {
+    return {
         "Spotlight": extract_spotlight(),
         "Trending": extract_trending(),
         "Top Airing": extract_top_airing(),
         "Most Popular": extract_most_popular(),
         "Most Favourite": extract_most_favourite(),
         "Latest Completed": extract_latest_completed(),
-    }
-
-    return {
-        "statusCode": 200,
-        "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(data, ensure_ascii=False, indent=4),
     }
