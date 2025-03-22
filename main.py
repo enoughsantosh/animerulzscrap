@@ -3,6 +3,8 @@ import httpx
 from bs4 import BeautifulSoup
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import os
+import uvicorn
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -117,3 +119,10 @@ async def fetch_homepage():
         "Most Favourite": extract_anime_by_section("Most Favourite"),
         "Latest Completed": extract_anime_by_section("Latest Completed"),
     }
+
+
+
+ 
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Get port from Render, default to 8000
+    uvicorn.run(app, host="0.0.0.0", port=port)
