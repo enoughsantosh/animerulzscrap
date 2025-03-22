@@ -65,7 +65,8 @@ async def fetch_homepage():
     # 🟢 Extract Other Sections (Top Airing, Most Popular, Most Favourite, Latest Completed)
     def extract_section(section_class):
         anime_list = []
-        section = soup.select_one("#anime-featured")
+        section = soup.select_one(f".{section_class}")  # Corrected selector
+
         if section:
             for item in section.select(".film-poster"):
                 title_elem = item.select_one(".dynamic-name")
