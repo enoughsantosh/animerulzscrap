@@ -63,29 +63,29 @@ async def fetch_homepage():
         return trending
 
     # 🟢 Extract Other Sections (Top Airing, Most Popular, Most Favourite, Latest Completed)
-    def extract_section(section_id):
-    anime_list = []
-    section = soup.select_one(f"#{section_id}")
+    def extract_section(section_class):
+        anime_list = []
+        section = soup.select_one(f".{section_class}")
 
-    if section:
-        for item in section.select(".swiper-slide"):
-            title_elem = item.select_one(".film-title")
-            image_elem = item.select_one(".film-poster img")
-            link_elem = item.select_one(".film-poster")
+        if section:
+            for item in section.select(".film-poster"):
+                title_elem = item.select_one(".dynamic-name")
+                image_elem = item.select_one("img")
+                link_elem = item.select_one("a")
 
-            if title_elem and image_elem and link_elem:
-                anime_list.append({
-                    "title": title_elem.text.strip(),
-                    "image": image_elem["data-src"],
-                    "link": link_elem["href"],
-                })
-    return anime_list
+                if title_elem and image_elem and link_elem:
+                    anime_list.append({
+                        "title": title_elem.text.strip(),
+                        "image": image_elem["data-src"],
+                        "link": link_elem["href"],
+                    })
+        return anime_list
 
-    # Corrected section IDs from the HTML
-    top_airing = extract_section("anime-trending")
-    most_popular = extract_section("anime-featured")
-    most_favourite = extract_section("anime-featured")
-    latest_completed = extract_section("anime-featured")
+    # Corrected section class names (change these if incorrect)
+    top_airing = extract_section("block_area_top-airing")
+    most_popular = extract_section("block_area_most-popular")
+    most_favourite = extract_section("block_area_most-favourite")
+    latest_completed = extract_section("block_area_latest-completed")
 
     return {
         "Spotlight": extract_spotlight(),
@@ -94,4 +94,4 @@ async def fetch_homepage():
         "Most Popular": most_popular,
         "Most Favourite": most_favourite,
         "Latest Completed": latest_completed,
-                            }
+    }
