@@ -64,22 +64,22 @@ async def fetch_homepage():
 
     # 🟢 Extract Other Sections (Top Airing, Most Popular, Most Favourite, Latest Completed)
     def extract_section(section_id):
-        anime_list = []
-        section = soup.select_one(f"#{section_id}")
+    anime_list = []
+    section = soup.select_one(f"#{section_id}")
 
-        if section:
-            for item in section.select(".film-poster"):
-                title_elem = item.select_one(".dynamic-name")
-                image_elem = item.select_one("img")
-                link_elem = item.select_one("a")
+    if section:
+        for item in section.select(".swiper-slide"):
+            title_elem = item.select_one(".film-title")
+            image_elem = item.select_one(".film-poster img")
+            link_elem = item.select_one(".film-poster")
 
-                if title_elem and image_elem and link_elem:
-                    anime_list.append({
-                        "title": title_elem.text.strip(),
-                        "image": image_elem["data-src"],
-                        "link": link_elem["href"],
-                    })
-        return anime_list
+            if title_elem and image_elem and link_elem:
+                anime_list.append({
+                    "title": title_elem.text.strip(),
+                    "image": image_elem["data-src"],
+                    "link": link_elem["href"],
+                })
+    return anime_list
 
     # Corrected section IDs from the HTML
     top_airing = extract_section("anime-trending")
