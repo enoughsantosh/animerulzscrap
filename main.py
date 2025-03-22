@@ -62,30 +62,31 @@ async def fetch_homepage():
                 })
         return trending
 
-    # 🟢 Extract Other Sections (Top Airing, Most Popular, Most Favourite, Latest Completed)
-    def extract_section(section_class):
+    # 🟢 Extract Anime from a Specific Section
+    def extract_anime_by_section(section_title):
         anime_list = []
-        section = soup.select_one(f".{section_class}")  # Corrected selector
-
+        section = soup.find("h2", string=section_title)
         if section:
-            for item in section.select(".film-poster"):
-                title_elem = item.select_one(".dynamic-name")
-                image_elem = item.select_one("img")
-                link_elem = item.select_one("a")
+            container = section.find_parent("section")
+            if container:
+                for item in container.select(".film-poster"):
+                    title_elem = item.select_one(".dynamic-name")
+                    image_elem = item.select_one("img")
+                    link_elem = item.select_one("a")
 
-                if title_elem and image_elem and link_elem:
-                    anime_list.append({
-                        "title": title_elem.text.strip(),
-                        "image": image_elem["data-src"],
-                        "link": link_elem["href"],
-                    })
+                    if title_elem and image_elem and link_elem:
+                        anime_list.append({
+                            "title": title_elem.text.strip(),
+                            "image": image_elem["data-src"],
+                            "link": link_elem["href"],
+                        })
         return anime_list
 
-    # Corrected section class names from the HTML
-    top_airing = extract_section("block_area_top-airing")
-    most_popular = extract_section("block_area_most-popular")
-    most_favourite = extract_section("block_area_most-favourite")
-    latest_completed = extract_section("block_area_latest-completed")
+    # 🟢 Extract Sections
+    top_airing = extract_anime_by_section("Top Airing")
+    most_popular = extract_anime_by_section("Most Popular")
+    most_favourite = extract_anime_by_section("Most Favourite")
+    latest_completed = extract_anime_by_section("Latest Completed")
 
     return {
         "Spotlight": extract_spotlight(),
