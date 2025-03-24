@@ -26,7 +26,7 @@ def home():
 
 @app.get("/home")
 async def fetch_episode_data(query: str):
-    url = f"https://yasdownloads.org/{query}"
+    url = f"https://proxy.tohost.site/api/v1/streamingProxy?url=https://yasdownloads.org/{query}"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
