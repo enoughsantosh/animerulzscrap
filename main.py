@@ -55,6 +55,3 @@ async def fetch_episode_data(query: str):
             logger.error(f"Error fetching episode data: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-# Vercel ASGI handler
-from mangum import Mangum
-handler = Mangum(app)
