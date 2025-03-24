@@ -3,8 +3,8 @@ import httpx
 from bs4 import BeautifulSoup
 from fastapi.middleware.cors import CORSMiddleware
 import logging
-import os
-import uvicorn
+import re
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,104 +25,36 @@ def home():
     return {"message": "Anime Search API is running!"}
 
 @app.get("/home")
-async def fetch_homepage():
-    url = "https://animerulzapp.com/home"
-    headers = {"User-Agent": "Mozilla/5.0"}
+async def fetch_episode_data(query: str):
+    url = f"https://yasdownloads.org/{query}"
 
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(url, headers=headers)
-
-        # Check for HTTP errors
-        response.raise_for_status()
-
-    except httpx.RequestError as e:
-        logger.error(f"Request error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch data due to network issue.")
-
-    except httpx.HTTPStatusError as e:
-        logger.error(f"HTTP error: {e}")
-        raise HTTPException(status_code=e.response.status_code, detail="Failed to fetch data from source.")
-
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # 🟢 Extract Spotlight
-    def extract_spotlight():
-        spotlight = []
-        for slide in soup.select(".deslide-item"):
-            try:
-                title_elem = slide.select_one(".desi-head-title")
-                image_elem = slide.select_one(".deslide-cover-img img")
-                link_elem = slide.select_one(".desi-buttons a")
-
-                if title_elem and image_elem and link_elem:
-                    spotlight.append({
-                        "title": title_elem.text.strip(),
-                        "image": image_elem.get("data-src", ""),
-                        "link": link_elem.get("href", ""),
-                    })
-            except Exception as e:
-                logger.warning(f"Error extracting spotlight item: {e}")
-
-        return spotlight
-
-    # 🟢 Extract Trending
-    def extract_trending():
-        trending = []
-        for item in soup.select("#trending-home .swiper-slide"):
-            try:
-                title_elem = item.select_one(".film-title")
-                image_elem = item.select_one(".film-poster img")
-                link_elem = item.select_one(".film-poster")
-
-                if title_elem and image_elem and link_elem:
-                    trending.append({
-                        "title": title_elem.text.strip(),
-                        "image": image_elem.get("data-src", ""),
-                        "link": link_elem.get("href", ""),
-                    })
-            except Exception as e:
-                logger.warning(f"Error extracting trending item: {e}")
-
-        return trending
-
-    # 🟢 Extract Anime from a Specific Section
-    def extract_anime_by_section(section_title):
-        anime_list = []
-        try:
-            section = soup.find("h2", string=section_title)
-            if section:
-                container = section.find_parent("section")
-                if container:
-                    for item in container.select(".film-poster"):
-                        title_elem = item.select_one(".dynamic-name")
-                        image_elem = item.select_one("img")
-                        link_elem = item.select_one("a")
-
-                        if title_elem and image_elem and link_elem:
-                            anime_list.append({
-                                "title": title_elem.text.strip(),
-                                "image": image_elem.get("data-src", ""),
-                                "link": link_elem.get("href", ""),
-                            })
-        except Exception as e:
-            logger.warning(f"Error extracting section '{section_title}': {e}")
-
-        return anime_list
-
-    # 🟢 Extract Sections
-    return {
-        "Spotlight": extract_spotlight(),
-        "Trending": extract_trending(),
-        "Top Airing": extract_anime_by_section("Top Airing"),
-        "Most Popular": extract_anime_by_section("Most Popular"),
-        "Most Favourite": extract_anime_by_section("Most Favourite"),
-        "Latest Completed": extract_anime_by_section("Latest Completed"),
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
 
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(url, headers=headers, timeout=10)
 
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail="Failed to fetch the page")
 
- 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Get port from Render, default to 8000
-    uvicorn.run(app, host="0.0.0.0", port=port)
+            soup = BeautifulSoup(response.text, "html.parser")
+            script_tags = soup.find_all("script")
+
+            for script in script_tags:
+                if "window.seasonData" in script.text:
+                    match = re.search(r'window\.seasonData\s*=\s*({.*?});', script.text, re.DOTALL)
+                    if match:
+                        season_data = json.loads(match.group(1))
+                        return season_data
+
+            return {"message": "No Hindi episode available"}
+
+        except Exception as e:
+            logger.error(f"Error fetching episode data: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+
+# Vercel ASGI handler
+from mangum import Mangum
+handler = Mangum(app)
